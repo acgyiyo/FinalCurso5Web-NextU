@@ -32,8 +32,8 @@ body{
   background: rgba(232, 115, 6, 0.5);
   border-radius: 5px;
   height: 700px;
-  display: flex;
-  flex-flow: row wrap;
+  /*display: flex;*/
+  /*flex-flow: row wrap;*/
 }
 
 .panel-score{
@@ -97,6 +97,20 @@ div[class^='col']{
   justify-content: flex-end;
   align-items: center;
 
+}
+div[class^='col'].[class^='f']{
+  background-color: black;
+}
+
+div[class^='row']{
+  display: flex;
+  flex-flow: row wrap;
+  height: 14.28%;
+}
+
+.candy{
+  width: 90%;
+  display: none;
 }
 
 .elemento{
