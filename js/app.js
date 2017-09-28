@@ -1,170 +1,217 @@
+var globalC = 22;
 
-var candyPoints = [];
-var playing = true;
-var play;
+$(document).ready(function () {
+  var globalD = 33;
+  $('.btn-reinicio').click(function (e) {
+    if ($(this).html() == 'Iniciar') {
+      $(this).html('Reiniciar');
+      init();
+    } else {
+      location.reload();
+    }
+  });
 
-var init = function () {
-  startTimer();
-  setCandys();
-  setDroppable();
-  intervalManager(true, initGame, 2500);
-}
+  $(function () {
 
-function intervalManager(flag, func, time) {
+  });
+
+  var candyPoints = [];
+  var playing = true;
+  var play;
   var intervalID = null;
-  if (flag){
-    intervalID = setInterval(func, time);
-  }else{
-    console.log('clear '+intervalID);
-    clearInterval(intervalID);
+  var points = 0;
+
+  var init = function () {
+    $('#timer').html('2:00');
+    setInterval(startTimer, 1000);
+    setCandys();
+    setDroppable();
+    intervalManager(true, initGame, 2500);
   }
-}
 
-var initGame = function () {
-  setTimeout(function () {
-    checkRows();
-    checkColums();
-  }, 1000);
-}
-
-function endGame() {
-  console.log("fin de juego");
-}
-
-function setDroppable() {
-  $("div[class^='col']").droppable({
-    accept: '.candy',
-    drop: function (event, ui) {
-      $(this).html($(this).attr('class'));
-      $(ui.draggable).removeClass('candy');
-    }
-  });
-}
-
-function setCandys() {
-  for (var row = 1; row < 8; row++) {
-    for (var col = 1; col < 8; col++) {
-      var img = Math.floor((Math.random() * 4) + 1);
-      $('.row-' + row).find('.col-' + col).html('<img name=' + img + ' class="candy" src="image/' + img + '.png"></img>');
+  function intervalManager(flag, func, time) {
+    if (flag) {
+      intervalID = setInterval(func, time);
+      console.log('init ' + intervalID);
+    } else {
+      console.log('clear ' + intervalID);
+      clearInterval(intervalID);
     }
   }
-  $('.panel-tablero img').draggable();
-  setTimeout(function () { $('.panel-tablero img').show('slide', { direction: "up" }, 800); }, 200);
-}
 
-function setCandy(row, col, action) {
-  var columnSel = $('.row-' + row).find('.col-' + col);
-  if (action == 'c') {
-    var img = Math.floor((Math.random() * 4) + 1);
-    columnSel.html('<img name=' + img + ' class="candy" src="image/' + img + '.png"></img>');
-  } else if (action == 'm') {
-    var rowAnt = parseInt(row) - 1;
-    $('.row-' + rowAnt).find('.col-' + col).find('img').appendTo(columnSel).hide().show('slide', { direction: "up" }, 900);
-  }
-  setTimeout(function () { columnSel.find('img').show('slide', { direction: "up" }, 500); }, 200);
-  columnSel.find('img').draggable();
-}
-
-function checkRows() {
-  for (var row = 1; row < 8; row++) {
-    for (var col = 1; col < 8; col++) {
-      var candy = getCandy(row, col);
-      if (col < 7) {
-        for (var x = 1; x < 8; x++) {
-          if (candy == getCandy(row, col + x) && candy == getCandy(row, col + x + 1)) {
-            if (candy == getCandy(row, col + x + 2)) {
-              plusPoints(row, col, 'row', col + 4);
-              col += 4;
-              break;
-            } else {
-              plusPoints(row, col, 'row', col + 3);
-              col += 3;
-              break;
-            }
-          }
-          break;
-        }
-      }
-    }
-  }
-}
-
-function checkColums() {
-  for (var col = 1; col < 8; col++) {
-    for (var row = 1; row < 8; row++) {
-      var candy = getCandy(row, col);
-      if (row < 7) {
-        for (var x = 1; x < 8; x++) {
-          if (candy == getCandy(row + x, col) && candy == getCandy(row + x + 1, col)) {
-            if (candy == getCandy(row + x + 2, col)) {
-              plusPoints(row, col, 'col', row + 4);
-              row += 4;
-              break;
-            } else {
-              plusPoints(row, col, 'col', row + 3);
-              row += 3;
-              break;
-            }
-          }
-          break;
-        }
-      }
-    }
-  }
-  finishChecking();
-}
-
-function plusPoints(row, col, dir, num) {
-  if (dir == 'row') {
-    for (var i = col; i < num; i++) {
-      candyPoints.push($('.row-' + row).find('.col-' + i));
-      //sumar puntos
-    }
-  } else {
-    for (var i = row; i < num; i++) {
-      candyPoints.push($('.row-' + i).find('.col-' + col));
-      //sumar puntos
-    }
-  }
-}
-
-function finishChecking() {
-  $.each(candyPoints, function (idx, val) {
-    val.effect("pulsate", 1500);
+  var initGame = function () {
     setTimeout(function () {
-      val.html('');
-      moveCandy();
-    }, 1500);
-  });
-  candyPoints = [];
-}
+      checkRows();
+      checkColums();
+    }, 1000);
+  }
 
-function moveCandy() {
-  var boardEmty = true;
-  var hollow = false;
-  while (boardEmty) {
-    boardEmty = false;
+  function endGame() {
+    clearInterval(startTimer);
+    console.log("fin de juego");
+  }
+
+  function setDroppable() {
+    $("div[class^='col']").droppable({
+      accept: '.candy',
+      drop: function (event, ui) {
+        $(this).html($(this).attr('class'));
+        $(ui.draggable).removeClass('candy');
+      }
+    });
+  }
+
+  function setCandys() {
     for (var row = 1; row < 8; row++) {
       for (var col = 1; col < 8; col++) {
-        var candy = $('.row-' + row).find('.col-' + col).find('img');
-        if (!candy.length) {
-          if (row == 1) {
-            setCandy(row, col, 'c');
-          } else {
-            setCandy(row, col, 'm');
-            boardEmty = true;
+        var img = Math.floor((Math.random() * 4) + 1);
+        $('.row-' + row).find('.col-' + col).html('<img name=' + img + ' class="candy" src="image/' + img + '.png"></img>');
+      }
+    }
+    $('.panel-tablero img').draggable();
+    setTimeout(function () { $('.panel-tablero img').show('slide', { direction: "up" }, 800); }, 200);
+  }
+
+  function setCandy(row, col, action) {
+    var columnSel = $('.row-' + row).find('.col-' + col);
+    if (action == 'c') {
+      var img = Math.floor((Math.random() * 4) + 1);
+      columnSel.html('<img name=' + img + ' class="candy" src="image/' + img + '.png"></img>');
+    } else if (action == 'm') {
+      var rowAnt = parseInt(row) - 1;
+      $('.row-' + rowAnt).find('.col-' + col).find('img').appendTo(columnSel).hide().show('slide', { direction: "up" }, 900);
+    }
+    setTimeout(function () { columnSel.find('img').show('slide', { direction: "up" }, 500); }, 200);
+    columnSel.find('img').draggable();
+  }
+
+  function checkRows() {
+    for (var row = 1; row < 8; row++) {
+      for (var col = 1; col < 8; col++) {
+        var candy = getCandy(row, col);
+        if (col < 7) {
+          for (var x = 1; x < 8; x++) {
+            if (candy == getCandy(row, col + x) && candy == getCandy(row, col + x + 1)) {
+              if (candy == getCandy(row, col + x + 2)) {
+                if (candy == getCandy(row, col + x + 3)) {
+                  plusPoints(row, col, 'row', col + 5);
+                  col += 5;
+                  break;
+                } else {
+                  plusPoints(row, col, 'row', col + 4);
+                  col += 4;
+                  break;
+                }
+              } else {
+                plusPoints(row, col, 'row', col + 3);
+                col += 3;
+                break;
+              }
+            }
+            break;
           }
         }
       }
     }
   }
-  intervalManager(false);
-}
 
-function getCandy(row, col) {
-  return $('.row-' + row).find('.col-' + col).find('img').attr('name');
-}
+  function checkColums() {
+    for (var col = 1; col < 8; col++) {
+      for (var row = 1; row < 8; row++) {
+        var candy = getCandy(row, col);
+        if (row < 7) {
+          for (var x = 1; x < 8; x++) {
+            if (candy == getCandy(row + x, col) && candy == getCandy(row + x + 1, col)) {
+              if (candy == getCandy(row + x + 2, col)) {
+                if (candy == getCandy(row + x + 3, col)) {
+                  plusPoints(row, col, 'col', row + 5);
+                  row += 5;
+                  break;
+                } else {
+                  plusPoints(row, col, 'col', row + 4);
+                  row += 4;
+                  break;
+                }
+              } else {
+                plusPoints(row, col, 'col', row + 3);
+                row += 3;
+                break;
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+    finishChecking();
+  }
 
-var Game = (function () {
+  function plusPoints(row, col, dir, num) {
+    if (dir == 'row') {
+      for (var i = col; i < num; i++) {
+        candyPoints.push($('.row-' + row).find('.col-' + i));
+        if (num == 5) {
+          points = points + 6;
+        } else if (num == 4) {
+          points = points + 3;
+        } else {
+          points++;
+        }
+      }
+    } else {
+      for (var i = row; i < num; i++) {
+        candyPoints.push($('.row-' + i).find('.col-' + col));
+        if (num == 5) {
+          points = points + 6;
+        } else if (num == 4) {
+          points = points + 3;
+        } else {
+          points++;
+        }
+      }
+    }
+  }
 
-})();
+  function finishChecking() {
+    $.each(candyPoints, function (idx, val) {
+      val.effect("pulsate", 1500);
+      setTimeout(function () {
+        val.html('');
+        moveCandy();
+      }, 1500);
+      $('#score-text').html(points);
+    });
+    candyPoints = [];
+  }
+
+  function moveCandy() {
+    var boardEmty = true;
+    var hollow = false;
+    while (boardEmty) {
+      boardEmty = false;
+      for (var row = 1; row < 8; row++) {
+        for (var col = 1; col < 8; col++) {
+          var candy = $('.row-' + row).find('.col-' + col).find('img');
+          if (!candy.length) {
+            if (row == 1) {
+              setCandy(row, col, 'c');
+            } else {
+              setCandy(row, col, 'm');
+              boardEmty = true;
+            }
+          }
+        }
+      }
+    }
+    //intervalManager(false);
+  }
+
+  function getCandy(row, col) {
+    return $('.row-' + row).find('.col-' + col).find('img').attr('name');
+  }
+
+  var Game = (function () {
+
+  })();
+
+});
