@@ -1,6 +1,12 @@
 var globalC = 22;
+var suelto=null;
 
-$(document).ready(function () {
+  function endGame() {
+    clearInterval(startTimer);
+    console.log("fin de juego");
+  }
+
+// $(document).ready(function () {
   var globalD = 33;
   $('.btn-reinicio').click(function (e) {
     if ($(this).html() == 'Iniciar') {
@@ -9,10 +15,6 @@ $(document).ready(function () {
     } else {
       location.reload();
     }
-  });
-
-  $(function () {
-
   });
 
   var candyPoints = [];
@@ -26,7 +28,7 @@ $(document).ready(function () {
     setInterval(startTimer, 1000);
     setCandys();
     setDroppable();
-    intervalManager(true, initGame, 2500);
+    initGame();
   }
 
   function intervalManager(flag, func, time) {
@@ -46,17 +48,41 @@ $(document).ready(function () {
     }, 1000);
   }
 
-  function endGame() {
-    clearInterval(startTimer);
-    console.log("fin de juego");
-  }
 
   function setDroppable() {
     $("div[class^='col']").droppable({
-      accept: '.candy',
+      accept: function(e){
+        var colV=0;
+        var rowV=0;
+        var colAct=0;
+        var rowAct=0;
+        if(e.hasClass("candy")){
+          colAct=$(this).attr('class').split(' ')[0].split('-')[1];
+          rowAct=$(this).parent().attr('class').split('-')[1];
+
+          colV=$(e).parent().attr('class').split(' ')[0].split('-')[1];
+          rowV=$(e).parent().parent().attr('class').split('-')[1];
+
+          if(colAct != colV && rowAct != rowV){
+            if((colAct - colV == 1) || (colAct - colV == -1) ){
+              if((rowAct - rowV == 1) || (rowAct - rowV == -1)){
+                return true;
+              }
+            }
+          }
+        }
+      },
       drop: function (event, ui) {
-        $(this).html($(this).attr('class'));
-        $(ui.draggable).removeClass('candy');
+
+        colAct=$(this).attr('class').split(' ')[0].split('-')[1];
+        rowAct=$(this).parent().attr('class').split('-')[1];
+
+        colV=$(ui.draggable).parent().attr('class').split(' ')[0].split('-')[1];
+        rowV=$(ui.draggable).parent().parent().attr('class').split('-')[1];
+        console.log("V: "+rowV+"-"+colV+" || ");
+        console.log(rowAct+"-"+colAct);
+
+        //$(ui.draggable).removeClass('candy');
       }
     });
   }
@@ -68,7 +94,13 @@ $(document).ready(function () {
         $('.row-' + row).find('.col-' + col).html('<img name=' + img + ' class="candy" src="image/' + img + '.png"></img>');
       }
     }
-    $('.panel-tablero img').draggable();
+    $('.panel-tablero img').draggable({
+      snap: true,
+      snapTolerance: 80,
+      snapMode: "inner",
+      stack: ".candy",
+      revert: "invalid"
+    });
     setTimeout(function () { $('.panel-tablero img').show('slide', { direction: "up" }, 800); }, 200);
   }
 
@@ -82,7 +114,13 @@ $(document).ready(function () {
       $('.row-' + rowAnt).find('.col-' + col).find('img').appendTo(columnSel).hide().show('slide', { direction: "up" }, 900);
     }
     setTimeout(function () { columnSel.find('img').show('slide', { direction: "up" }, 500); }, 200);
-    columnSel.find('img').draggable();
+    columnSel.find('img').draggable({
+      snap: true,
+      snapTolerance: 80,
+      snapMode: "inner",
+      stack: ".candy",
+      revert: "invalid"
+    });
   }
 
   function checkRows() {
@@ -149,7 +187,8 @@ $(document).ready(function () {
   function plusPoints(row, col, dir, num) {
     if (dir == 'row') {
       for (var i = col; i < num; i++) {
-        candyPoints.push($('.row-' + row).find('.col-' + i));
+        $('.row-' + row).find('.col-' + i).addClass("animate");
+        //candyPoints.push($('.row-' + row).find('.col-' + i));
         if (num == 5) {
           points = points + 6;
         } else if (num == 4) {
@@ -160,7 +199,8 @@ $(document).ready(function () {
       }
     } else {
       for (var i = row; i < num; i++) {
-        candyPoints.push($('.row-' + i).find('.col-' + col));
+        // candyPoints.push($('.row-' + i).find('.col-' + col));
+        $('.row-' + i).find('.col-' + col).addClass("animate");
         if (num == 5) {
           points = points + 6;
         } else if (num == 4) {
@@ -173,15 +213,32 @@ $(document).ready(function () {
   }
 
   function finishChecking() {
-    $.each(candyPoints, function (idx, val) {
-      val.effect("pulsate", 1500);
-      setTimeout(function () {
-        val.html('');
+    var candyAni = $(".animate");
+    candyAni.effect("pulsate",1300);
+    //candyPoints.effect("pulsate",1500);
+    setTimeout(function () {
+      candyAni.html('');
+      candyAni.removeClass("animate");
+      setTimeout(function(){
         moveCandy();
-      }, 1500);
-      $('#score-text').html(points);
-    });
+        //intervalManager(true, initGame, 2500);
+        initGame();
+      });
+    }, 1500);
+    $('#score-text').html(points);
     candyPoints = [];
+
+
+    // $.each(candyPoints, function (idx, val) {
+    //   val.effect("pulsate", 1500);
+    //   setTimeout(function () {
+    //     val.html('');
+    //     moveCandy();
+    //   }, 1500);
+    //   $('#score-text').html(points);
+    // });
+    // candyPoints = [];
+    // intervalManager(true, initGame, 2500);
   }
 
   function moveCandy() {
@@ -214,4 +271,4 @@ $(document).ready(function () {
 
   })();
 
-});
+// });
