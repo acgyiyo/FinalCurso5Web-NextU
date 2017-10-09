@@ -7,7 +7,6 @@ var suelto=null;
   }
 
 // $(document).ready(function () {
-  var globalD = 33;
   $('.btn-reinicio').click(function (e) {
     if ($(this).html() == 'Iniciar') {
       $(this).html('Reiniciar');
@@ -22,6 +21,9 @@ var suelto=null;
   var play;
   var intervalID = null;
   var points = 0;
+  var goodMov = false;
+  var candyAct = {};
+  var candyV = {};
 
   var init = function () {
     $('#timer').html('2:00');
@@ -45,45 +47,72 @@ var suelto=null;
     setTimeout(function () {
       checkRows();
       checkColums();
-    }, 1000);
+    }, 800);
   }
 
 
   function setDroppable() {
     $("div[class^='col']").droppable({
-      accept: function(e){
-        var colV=0;
-        var rowV=0;
-        var colAct=0;
-        var rowAct=0;
-        if(e.hasClass("candy")){
-          colAct=$(this).attr('class').split(' ')[0].split('-')[1];
-          rowAct=$(this).parent().attr('class').split('-')[1];
+      accept: ".candy",
+      drop: function (event, ui) {
 
-          colV=$(e).parent().attr('class').split(' ')[0].split('-')[1];
-          rowV=$(e).parent().parent().attr('class').split('-')[1];
+        var colAct=$(this).attr('class').split(' ')[0].split('-')[1];
+        var rowAct=$(this).parent().attr('class').split('-')[1];
+        var colV=$(ui.draggable).parent().attr('class').split(' ')[0].split('-')[1];
+        var rowV=$(ui.draggable).parent().parent().attr('class').split('-')[1];
+        console.log("V: "+rowV+"-"+colV+" || ");
+        console.log(rowAct+"-"+colAct);
+        var imgAct = $(this).find('img').attr('name');
+        var imgV = $(ui.draggable).attr('name');
+        candyAct = {"img": imgAct, "col": colV, "row": rowV};
+        candyV = {"img": imgV, "col": colAct, "row": rowAct};
+        debugger;
 
-          if(colAct != colV && rowAct != rowV){
-            if((colAct - colV == 1) || (colAct - colV == -1) ){
-              if((rowAct - rowV == 1) || (rowAct - rowV == -1)){
-                return true;
-              }
+        if(colAct != colV){
+          if((colAct - colV == 1) || (colAct - colV == -1) ){
+            if(rowAct == rowV){
+              var parentDrag = $(ui.draggable).parent();
+              parentDrag.html("");
+              $(this).html("");
+              parentDrag.html(createImg(imgAct));
+              $(this).html(createImg(imgV));
+              setDraggable($(this).find("img"));
+              setDraggable(parentDrag.find("img"));
+              $(this).find("img").show();
+              parentDrag.find("img").show();
+              goodMov = true;
+            }
+          }
+        }else if(rowAct != rowV){
+          if((rowAct - rowV == 1) || (rowAct - rowV == -1)){
+            if (colAct == colV) {
+              var parentDrag = $(ui.draggable).parent();
+              parentDrag.html("");
+              $(this).html("");
+              parentDrag.html(createImg(imgAct));
+              $(this).html(createImg(imgV));
+              setDraggable($(this).find("img"));
+              setDraggable(parentDrag.find("img"));
+              $(this).find("img").show();
+              parentDrag.find("img").show();
+              goodMov = true;
             }
           }
         }
-      },
-      drop: function (event, ui) {
-
-        colAct=$(this).attr('class').split(' ')[0].split('-')[1];
-        rowAct=$(this).parent().attr('class').split('-')[1];
-
-        colV=$(ui.draggable).parent().attr('class').split(' ')[0].split('-')[1];
-        rowV=$(ui.draggable).parent().parent().attr('class').split('-')[1];
-        console.log("V: "+rowV+"-"+colV+" || ");
-        console.log(rowAct+"-"+colAct);
-
-        //$(ui.draggable).removeClass('candy');
+        // if(!goodMov){
+        //   goodMov = false;
+        // }
       }
+    });
+  }
+
+  function setDraggable(obj){
+    obj.draggable({
+      snap: true,
+      snapTolerance: 80,
+      snapMode: "inner",
+      stack: ".candy",
+      revert: true
     });
   }
 
@@ -91,16 +120,10 @@ var suelto=null;
     for (var row = 1; row < 8; row++) {
       for (var col = 1; col < 8; col++) {
         var img = Math.floor((Math.random() * 4) + 1);
-        $('.row-' + row).find('.col-' + col).html('<img name=' + img + ' class="candy" src="image/' + img + '.png"></img>');
+        $('.row-' + row).find('.col-' + col).html(createImg(img));
       }
     }
-    $('.panel-tablero img').draggable({
-      snap: true,
-      snapTolerance: 80,
-      snapMode: "inner",
-      stack: ".candy",
-      revert: "invalid"
-    });
+    setDraggable($('.panel-tablero img'));
     setTimeout(function () { $('.panel-tablero img').show('slide', { direction: "up" }, 800); }, 200);
   }
 
@@ -108,19 +131,17 @@ var suelto=null;
     var columnSel = $('.row-' + row).find('.col-' + col);
     if (action == 'c') {
       var img = Math.floor((Math.random() * 4) + 1);
-      columnSel.html('<img name=' + img + ' class="candy" src="image/' + img + '.png"></img>');
+      columnSel.html(createImg(img));
     } else if (action == 'm') {
       var rowAnt = parseInt(row) - 1;
       $('.row-' + rowAnt).find('.col-' + col).find('img').appendTo(columnSel).hide().show('slide', { direction: "up" }, 900);
     }
     setTimeout(function () { columnSel.find('img').show('slide', { direction: "up" }, 500); }, 200);
-    columnSel.find('img').draggable({
-      snap: true,
-      snapTolerance: 80,
-      snapMode: "inner",
-      stack: ".candy",
-      revert: "invalid"
-    });
+    setDraggable(columnSel.find('img'));
+  }
+
+  function createImg(img){
+    return '<img name=' + img + ' class="candy" src="image/' + img + '.png"></img>';
   }
 
   function checkRows() {
@@ -210,24 +231,37 @@ var suelto=null;
         }
       }
     }
+    goodMov = false;
   }
 
   function finishChecking() {
     var candyAni = $(".animate");
     candyAni.effect("pulsate",1300);
-    //candyPoints.effect("pulsate",1500);
     setTimeout(function () {
       candyAni.html('');
       candyAni.removeClass("animate");
       setTimeout(function(){
         moveCandy();
-        //intervalManager(true, initGame, 2500);
         initGame();
       });
     }, 1500);
     $('#score-text').html(points);
     candyPoints = [];
 
+    if(goodMov){
+      //devolver2candys;
+      $('.row-' + candyAct.row).find('.col-' + candyAct.col).html("");
+      $('.row-' + candyV.row).find('.col-' + candyV.col).html("");
+      $('.row-' + candyAct.row).find('.col-' + candyAct.col).html(createImg(candyV.img));
+      $('.row-' + candyV.row).find('.col-' + candyV.col).html(createImg(candyAct.img));
+      setDraggable($('.row-' + candyAct.row).find('.col-' + candyAct.col).find('img'));
+      setDraggable($('.row-' + candyV.row).find('.col-' + candyV.col).find('img'));
+      $('.row-' + candyAct.row).find('.col-' + candyAct.col).find('img').show();
+      $('.row-' + candyV.row).find('.col-' + candyV.col).find('img').show();
+      candyAct = {};
+      candyV = {};
+      goodMov = false;
+    }
 
     // $.each(candyPoints, function (idx, val) {
     //   val.effect("pulsate", 1500);
