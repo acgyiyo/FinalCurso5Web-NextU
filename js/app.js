@@ -1,21 +1,14 @@
-var globalC = 22;
-var suelto=null;
 
-  function endGame() {
-    clearInterval(startTimer);
-    console.log("fin de juego");
+$('.btn-reinicio').click(function (e) {
+  if ($(this).html() == 'Iniciar') {
+    $(this).html('Reiniciar');
+    Game.init();
+  } else {
+    location.reload();
   }
+});
 
-// $(document).ready(function () {
-  $('.btn-reinicio').click(function (e) {
-    if ($(this).html() == 'Iniciar') {
-      $(this).html('Reiniciar');
-      init();
-    } else {
-      location.reload();
-    }
-  });
-
+var Game = (function () {
   var candyPoints = [];
   var playing = true;
   var play;
@@ -24,6 +17,7 @@ var suelto=null;
   var goodMov = false;
   var candyAct = {};
   var candyV = {};
+  var movements = 0;
 
   var init = function () {
     $('#timer').html('2:00');
@@ -31,6 +25,7 @@ var suelto=null;
     setCandys();
     setDroppable();
     initGame();
+    intervalManager('titulo', pulsate, 500);
   }
 
   function intervalManager(flag, func, time) {
@@ -50,27 +45,34 @@ var suelto=null;
     }, 800);
   }
 
+  function pulsate() {
+    if ($('.main-titulo').css('color') == "rgb(255, 255, 255)") {
+      $('.main-titulo').css('color', '#DCFF0E');
+    } else {
+      $('.main-titulo').css('color', 'white');
+    }
+
+  }
 
   function setDroppable() {
     $("div[class^='col']").droppable({
       accept: ".candy",
       drop: function (event, ui) {
 
-        var colAct=$(this).attr('class').split(' ')[0].split('-')[1];
-        var rowAct=$(this).parent().attr('class').split('-')[1];
-        var colV=$(ui.draggable).parent().attr('class').split(' ')[0].split('-')[1];
-        var rowV=$(ui.draggable).parent().parent().attr('class').split('-')[1];
-        console.log("V: "+rowV+"-"+colV+" || ");
-        console.log(rowAct+"-"+colAct);
+        var colAct = $(this).attr('class').split(' ')[0].split('-')[1];
+        var rowAct = $(this).parent().attr('class').split('-')[1];
+        var colV = $(ui.draggable).parent().attr('class').split(' ')[0].split('-')[1];
+        var rowV = $(ui.draggable).parent().parent().attr('class').split('-')[1];
+        console.log("V: " + rowV + "-" + colV + " || ");
+        console.log(rowAct + "-" + colAct);
         var imgAct = $(this).find('img').attr('name');
         var imgV = $(ui.draggable).attr('name');
-        candyAct = {"img": imgAct, "col": colV, "row": rowV};
-        candyV = {"img": imgV, "col": colAct, "row": rowAct};
-        debugger;
+        candyAct = { "img": imgAct, "col": colV, "row": rowV };
+        candyV = { "img": imgV, "col": colAct, "row": rowAct };
 
-        if(colAct != colV){
-          if((colAct - colV == 1) || (colAct - colV == -1) ){
-            if(rowAct == rowV){
+        if (colAct != colV) {
+          if ((colAct - colV == 1) || (colAct - colV == -1)) {
+            if (rowAct == rowV) {
               var parentDrag = $(ui.draggable).parent();
               parentDrag.html("");
               $(this).html("");
@@ -81,10 +83,11 @@ var suelto=null;
               $(this).find("img").show();
               parentDrag.find("img").show();
               goodMov = true;
+              movements++;
             }
           }
-        }else if(rowAct != rowV){
-          if((rowAct - rowV == 1) || (rowAct - rowV == -1)){
+        } else if (rowAct != rowV) {
+          if ((rowAct - rowV == 1) || (rowAct - rowV == -1)) {
             if (colAct == colV) {
               var parentDrag = $(ui.draggable).parent();
               parentDrag.html("");
@@ -96,17 +99,15 @@ var suelto=null;
               $(this).find("img").show();
               parentDrag.find("img").show();
               goodMov = true;
+              movements++;
             }
           }
         }
-        // if(!goodMov){
-        //   goodMov = false;
-        // }
       }
     });
   }
 
-  function setDraggable(obj){
+  function setDraggable(obj) {
     obj.draggable({
       snap: true,
       snapTolerance: 80,
@@ -140,7 +141,7 @@ var suelto=null;
     setDraggable(columnSel.find('img'));
   }
 
-  function createImg(img){
+  function createImg(img) {
     return '<img name=' + img + ' class="candy" src="image/' + img + '.png"></img>';
   }
 
@@ -236,19 +237,20 @@ var suelto=null;
 
   function finishChecking() {
     var candyAni = $(".animate");
-    candyAni.effect("pulsate",1300);
+    candyAni.effect("pulsate", 1300);
     setTimeout(function () {
       candyAni.html('');
       candyAni.removeClass("animate");
-      setTimeout(function(){
+      setTimeout(function () {
         moveCandy();
         initGame();
       });
     }, 1500);
     $('#score-text').html(points);
+    $('#movimientos-text').html(movements);
     candyPoints = [];
 
-    if(goodMov){
+    if (goodMov) {
       //devolver2candys;
       $('.row-' + candyAct.row).find('.col-' + candyAct.col).html("");
       $('.row-' + candyV.row).find('.col-' + candyV.col).html("");
@@ -261,6 +263,7 @@ var suelto=null;
       candyAct = {};
       candyV = {};
       goodMov = false;
+      movements--;
     }
 
     // $.each(candyPoints, function (idx, val) {
@@ -294,15 +297,29 @@ var suelto=null;
         }
       }
     }
-    //intervalManager(false);
+  }
+
+  function endGame() {
+    console.log("fin de juego");
+    $('.time').hide();
+    setTimeout(function () {
+      $('.panel-tablero').show().hide();
+      $('.panel-score').prepend('<h1 style="text-align: center;" class="main-titulo">Juego Terminado</h1>');
+    }, 1600);
+    $('.panel-tablero').css({ "width": '0%', 'height': '0' });
+    $('.panel-score').css('width', '100%');
+    m = 9999;
   }
 
   function getCandy(row, col) {
     return $('.row-' + row).find('.col-' + col).find('img').attr('name');
   }
 
-  var Game = (function () {
+  return {
+    init: init,
+    endGame: endGame
+  }
 
-  })();
+})();
 
 // });
